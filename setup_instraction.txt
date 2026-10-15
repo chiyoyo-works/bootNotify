@@ -1,0 +1,60 @@
+============================================================
+InventoryServer / Boot & Daily Notify Setup Instructions
+============================================================
+
+This document outlines the steps required to set up the boot 
+notification and daily status reporting scripts on a Raspberry Pi 
+running systemd.
+
+------------------------------------------------------------
+1. Clone Repository & Set Up Virtual Environment
+------------------------------------------------------------
+cd ~/projects/
+git clone <Your_GitHub_Repository_URL> boot_notify
+cd boot_notify
+
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+deactivate
+
+------------------------------------------------------------
+2. Configure Environment Variables (.env)
+------------------------------------------------------------
+Create your environment configuration file from the template:
+cp .env.example .env
+
+Open the .env file and set your Discord Webhook URL:
+nano .env
+
+(Example content inside .env)
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID_AND_TOKEN
+
+------------------------------------------------------------
+3. Register systemd Services and Timers
+------------------------------------------------------------
+
+--- Boot Notification Service ---
+1. Create the service file:
+   sudo nano /etc/systemd/system/boot-notify.service
+
+2. Paste the following configuration (adjust paths and user if needed):
+   [Unit]
+   Description=InventoryServer Boot Notification to Discord
+   After=network.target network-online.target
+   Wants=network-online.target
+
+   [Service]
+   Type=oneshot
+   User=USER_NAME
+   WorkingDirectory=/home/USER_NAME/projects/boot_notify
+   ExecStart=/home/USER_NAME/projects/boot_notify/venv/bin/python /home/USER_NAME/projects/boot_notify/boot_notify.py
+
+   [Install]
+   WantedBy=multi-user.target
+
+3. Enable the service:
+   sudo systemctl daemon-reload
+   sudo systemctl enable boot-notify.service
+
+
